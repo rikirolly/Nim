@@ -1,0 +1,156 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.App {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 30px;
+}
+
+/* Basic styling that might be useful for the Nim game */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.game-status {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.nim-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.nim-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.nim-piece {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #4a90e2; /* Blu standard */
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent; /* Bordo trasparente per mantenere layout */
+}
+
+.nim-piece:hover {
+  transform: scale(1.1);
+  background-color: #2a70c2; /* Blu più scuro in hover */
+}
+
+/* Stile per i pezzi selezionati dall'utente */
+.nim-piece.selected {
+  background-color: #f5a623; /* Arancione */
+  border: 2px solid #d08c1d; /* Bordo arancione scuro */
+}
+
+/* Stile per i pezzi rimossi dall'AI (evidenziazione temporanea) */
+.nim-piece.ai-removing {
+  background-color: #d0021b; /* Rosso */
+  border: 2px solid #a00115; /* Bordo rosso scuro */
+  opacity: 0.7;
+  transform: scale(0.9); /* Leggermente più piccolo per effetto rimozione */
+}
+
+/* Contenitore per i pulsanti di azione */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Spazio tra i pulsanti */
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Stile specifico per il pulsante di debug */
+.debug-button {
+  background-color: #777; /* Grigio */
+}
+
+.debug-button:hover {
+  background-color: #555; /* Grigio più scuro */
+}
+
+button:hover {
+  background-color: #2a70c2;
+}
+
+/* Aggiungi stile per il bottone disabilitato */
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+button:hover:disabled {
+   background-color: #cccccc; /* Sovrascrive l'hover quando disabilitato */
+}
+
+/* Stile per le informazioni di debug */
+.debug-info {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: monospace; /* Usa un font monospazio per l'output di debug */
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left; /* Allinea il testo a sinistra per leggibilità */
+}
+
+.debug-info div {
+  margin-bottom: 5px; /* Spazio tra le righe di info */
+}
+
+.debug-info ul {
+  list-style-type: disc; /* Usa pallini per la lista */
+  padding-left: 20px; /* Indenta la lista */
+  margin: 5px 0 0 0; /* Rimuovi margini di default e aggiungi spazio sopra */
+}
+
+.debug-info li {
+  margin-bottom: 3px; /* Spazio tra gli elementi della lista */
+}
+
+@media (max-width: 600px) {
+  .nim-piece {
+    width: 20px;
+    height: 20px;
+  }
+}
