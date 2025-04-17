@@ -9,68 +9,26 @@ const AI_DELAY = 1500; // Ritardo per la mossa dell'AI in ms
 // Funzione helper per calcolare il Nim-sum
 const calculateNimSum = (piles) => piles.reduce((xorSum, count) => xorSum ^ count, 0);
 
-// Funzione helper per calcolare le mosse vincenti suggerite (per Debug)
+// Funzione helper per calcolare le mosse vincenti suggerite (per Debug - Standard Nim)
 const calculateWinningMoves = (piles) => {
   const winningMoves = [];
   const currentNimSum = calculateNimSum(piles);
 
   if (currentNimSum === 0) {
-    // Se il Nim-sum è già 0, qualsiasi mossa porta a un Nim-sum non zero.
-    // L'AI farà una mossa standard (es. rimuovere 1 dalla pila più grande).
-    // Non ci sono mosse "vincenti" immediate in termini di Nim-sum.
+    // Se il Nim-sum è già 0, qualsiasi mossa porta a un Nim-sum non zero (N-position).
     return [];
   }
 
+  // Trova tutte le mosse che portano a Nim-sum 0 (P-position)
   for (let i = 0; i < piles.length; i++) {
     if (piles[i] === 0) continue;
-
     const targetSize = piles[i] ^ currentNimSum;
     if (targetSize < piles[i]) {
       const removeCount = piles[i] - targetSize;
-
-      // Simula lo stato dopo la mossa per controllare l'eccezione Misère
-      const tempPiles = [...piles];
-      tempPiles[i] = targetSize;
-      const pilesGreaterThanOneAfter = tempPiles.filter(count => count > 1).length;
-      const allPilesAreOneOrZeroAfter = pilesGreaterThanOneAfter === 0;
-
-      let isLosingMisereMove = false;
-      if (allPilesAreOneOrZeroAfter) {
-          // Se dopo la mossa rimangono solo pile da 1 (o 0)
-          const onesCountAfter = tempPiles.filter(count => count === 1).length;
-          if (onesCountAfter % 2 === 0) {
-              // Se il numero di pile da 1 è pari, questa mossa perde in Misère
-              isLosingMisereMove = true;
-          }
-      }
-
-      // Aggiungi la mossa solo se NON è una mossa perdente specifica di Misère
-      if (!isLosingMisereMove) {
-          winningMoves.push({ rowIndex: i, removeCount: removeCount });
-      }
+      winningMoves.push({ rowIndex: i, removeCount: removeCount });
     }
   }
-
-   // Se tutte le mosse che portano a Nim-sum 0 sono perdenti in Misère,
-   // allora non ci sono mosse "vincenti" da suggerire secondo la strategia standard+Misère.
-   // Tuttavia, per il debug, potremmo voler mostrare *tutte* le mosse che portano a Nim-sum 0,
-   // anche quelle perdenti in Misère, per capire la logica dell'AI.
-   // Decidiamo di mostrare tutte le mosse che portano a Nim-sum 0.
-   // Ricalcoliamo senza il check Misère per il solo scopo di visualizzazione debug.
-   const debugWinningMoves = [];
-    for (let i = 0; i < piles.length; i++) {
-        if (piles[i] === 0) continue;
-        const targetSize = piles[i] ^ currentNimSum;
-        if (targetSize < piles[i]) {
-            const removeCount = piles[i] - targetSize;
-            debugWinningMoves.push({ rowIndex: i, removeCount: removeCount });
-        }
-    }
-
-
-  // Restituisce le mosse calcolate per il debug (senza filtro Misère complesso,
-  // dato che l'AI lo gestirà internamente). Mostra le mosse che portano a Nim-Sum 0.
-  return debugWinningMoves;
+  return winningMoves;
 };
 
 
@@ -110,7 +68,7 @@ function Game() {
     }
   };
 
-  // Funzione per confermare la mossa dell'utente
+  // Funzione per confermare la mossa dell'utente (Standard Nim)
   const handleTakeTurn = () => {
     if (selectedRow === null || selectedCount === 0 || gameOver) return;
 
@@ -120,85 +78,38 @@ function Game() {
     setSelectedRow(null);
     setSelectedCount(0);
 
-    // Misère Play: Chi svuota le pile perde
+    // Standard Play: Chi prende l'ultimo pezzo vince
     if (checkGameOver(newPiles)) {
         setGameOver(true);
-        setWinner(PLAYER_AI); // L'AI vince perché l'umano ha preso l'ultimo pezzo
+        setWinner(PLAYER_HUMAN); // L'umano vince perché ha preso l'ultimo pezzo
     } else {
         setCurrentPlayer(PLAYER_AI);
     }
   };
 
-  // Funzione per la mossa dell'AI con strategia Nim-sum (Misère)
+  // Funzione per la mossa dell'AI con strategia Nim-sum (Standard Nim)
   const performAiMove = () => {
     setAiRemoving({}); // Resetta evidenziazione
 
     const currentNimSum = calculateNimSum(piles);
     let bestMove = null; // { rowIndex: number, removeCount: number }
 
-    // Controlla se il gioco è in una fase finale Misère
-    const pilesGreaterThanOne = piles.filter(count => count > 1).length;
-    const isMisereEndgame = pilesGreaterThanOne <= 1;
-
     if (currentNimSum !== 0) {
-      // Posizione vincente (generalmente): trova una mossa per portare Nim-sum a 0
+      // Posizione vincente (N-position): trova una mossa per portare Nim-sum a 0 (P-position)
       for (let i = 0; i < piles.length; i++) {
         if (piles[i] === 0) continue;
         const targetSize = piles[i] ^ currentNimSum;
         if (targetSize < piles[i]) {
           const removeCount = piles[i] - targetSize;
-          // Controlla l'eccezione Misère
-          const isLosingMisereMove = isMisereEndgame && piles.every(count => count <= 1 || count === piles[i]) && piles.filter((count, idx) => (idx === i ? targetSize : count) === 1).length % 2 === 0;
-
-          if (!isLosingMisereMove) {
-            bestMove = { rowIndex: i, removeCount: removeCount };
-            break; // Trovata la mossa vincente standard (o valida per Misère)
-          } else {
-            // La mossa standard perde in Misère. Dobbiamo fare una mossa diversa.
-            // Prova a rimuovere 1 pezzo in meno o in più se possibile,
-            // altrimenti questa è l'unica mossa possibile (anche se perdente).
-            if (removeCount > 1) {
-                 bestMove = { rowIndex: i, removeCount: removeCount - 1 };
-                 // Non fare break, potremmo trovare una mossa migliore da un'altra pila
-            } else if (piles[i] > removeCount) { // Possiamo rimuovere di più?
-                 bestMove = { rowIndex: i, removeCount: removeCount + 1 };
-                 // Non fare break
-            } else {
-                 // Siamo costretti a fare la mossa "perdente" standard
-                 bestMove = { rowIndex: i, removeCount: removeCount };
-                 // Non fare break, magari un'altra pila offre alternative
-            }
-             // Se abbiamo trovato una mossa alternativa, continuiamo a cercare
-             // nel caso un'altra pila offra la mossa standard non problematica.
-             // Se non ne troviamo altre, useremo questa alternativa.
-             // Se troviamo la mossa standard non problematica da un'altra pila,
-             // sovrascriverà questa mossa alternativa.
-          }
+          bestMove = { rowIndex: i, removeCount: removeCount };
+          break; // Trovata la mossa ottimale
         }
       }
-       // Se dopo il ciclo non abbiamo trovato una mossa standard valida e
-       // abbiamo solo mosse alternative o la mossa standard "perdente", usiamo quella trovata.
-       // Se non abbiamo trovato NESSUNA mossa che porti a Nim-sum 0 (non dovrebbe accadere se Nim-sum != 0),
-       // allora bestMove sarà ancora null qui.
-       if (!bestMove) {
-           // Fallback se la logica sopra fallisce o siamo costretti alla mossa perdente
-           // e non abbiamo trovato alternative. Scegli la prima mossa valida trovata
-           // che portava a Nim-sum 0, anche se era "perdente" in Misère.
-            for (let i = 0; i < piles.length; i++) {
-                if (piles[i] === 0) continue;
-                const targetSize = piles[i] ^ currentNimSum;
-                if (targetSize < piles[i]) {
-                    bestMove = { rowIndex: i, removeCount: piles[i] - targetSize };
-                    break;
-                }
-            }
-       }
-
     }
 
     if (bestMove === null) {
-      // Posizione perdente (Nim-sum è 0) o fallback:
-      // Fai una mossa semplice, rimuovi 1 pezzo dalla pila più grande.
+      // Posizione perdente (P-position, Nim-sum è 0) o fallback:
+      // Fai una mossa qualsiasi, di solito rimuovere 1 pezzo dalla pila più grande.
       let largestPileIndex = -1;
       let maxPieces = 0;
       for (let i = 0; i < piles.length; i++) {
@@ -210,9 +121,8 @@ function Game() {
       if (largestPileIndex !== -1) {
         bestMove = { rowIndex: largestPileIndex, removeCount: 1 };
       } else {
-         // Non dovrebbe accadere se il gioco non è finito, ma per sicurezza...
          console.error("AI non può muovere!");
-         return; // Nessuna mossa possibile
+         return;
       }
     }
 
@@ -234,10 +144,10 @@ function Game() {
       setPiles(newPiles);
       setAiRemoving({}); // Rimuovi evidenziazione
 
-      // Misère Play: Chi svuota le pile perde
+      // Standard Play: Chi prende l'ultimo pezzo vince
       if (checkGameOver(newPiles)) {
         setGameOver(true);
-        setWinner(PLAYER_HUMAN); // L'umano vince perché l'AI ha preso l'ultimo pezzo
+        setWinner(PLAYER_AI); // L'AI vince perché ha preso l'ultimo pezzo
       } else {
         setCurrentPlayer(PLAYER_HUMAN);
       }
@@ -264,16 +174,15 @@ function Game() {
     setIsDebugMode(prevMode => !prevMode);
   };
 
-  // Determina lo stato del gioco da visualizzare
+  // Determina lo stato del gioco da visualizzare (Standard Nim)
   let status;
   if (gameOver) {
-    // Il messaggio di vittoria ora riflette la regola Misère
-    status = winner === PLAYER_HUMAN ? 'Hai vinto! (L\'AI ha preso l\'ultimo pezzo)' : 'L\'AI ha vinto! (Hai preso l\'ultimo pezzo)';
+    status = winner === PLAYER_HUMAN ? 'Hai vinto!' : 'L\'AI ha vinto!';
   } else {
     status = currentPlayer === PLAYER_HUMAN ? 'Il tuo turno' : 'Turno dell\'AI...';
   }
 
-  // Calcola il Nim-sum corrente per la visualizzazione debug
+  // Calcola Nim-sum e mosse suggerite per il debug
   const currentNimSum = calculateNimSum(piles);
   const suggestedMoves = isDebugMode ? calculateWinningMoves(piles) : [];
 
