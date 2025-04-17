@@ -107,6 +107,15 @@ button {
   background-color: #555; /* Grigio più scuro */
 }
 
+/* Stile specifico per il pulsante di restart */
+.restart-button {
+  background-color: #f5a623; /* Arancione */
+}
+
+.restart-button:hover {
+  background-color: #d08c1d; /* Arancione più scuro */
+}
+
 button:hover {
   background-color: #2a70c2;
 }

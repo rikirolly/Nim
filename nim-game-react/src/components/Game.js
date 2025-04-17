@@ -174,6 +174,19 @@ function Game() {
     setIsDebugMode(prevMode => !prevMode);
   };
 
+  // Funzione per ricominciare il gioco
+  const restartGame = () => {
+    setPiles(INITIAL_PILES);
+    setCurrentPlayer(PLAYER_HUMAN);
+    setSelectedRow(null);
+    setSelectedCount(0);
+    setAiRemoving({});
+    setGameOver(false);
+    setWinner(null);
+    // Opzionale: potresti voler disattivare il debug al riavvio
+    // setIsDebugMode(false);
+  };
+
   // Determina lo stato del gioco da visualizzare (Standard Nim)
   let status;
   if (gameOver) {
@@ -232,6 +245,10 @@ function Game() {
         {/* Pulsante Debug */}
         <button onClick={toggleDebugMode} className="debug-button">
           {isDebugMode ? 'Nascondi Debug' : 'Mostra Debug'}
+        </button>
+        {/* Pulsante Ricomincia */}
+        <button onClick={restartGame} className="restart-button">
+          Ricomincia
         </button>
       </div>
     </div>
